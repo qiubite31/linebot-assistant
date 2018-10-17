@@ -23,11 +23,11 @@ handler = WebhookHandler(config['line_bot']['Channel_Secret'])
 
 @app.route("/tra", methods=['GET'])
 def tra():
-    command = '鶯歌 內壢 2018-10-18'
+    command = 'TRA 鶯歌 內壢 2018-10-18'
 
     from PtxAuth import Auth
     auth = Auth('c6751135db984d388b28508a966e573d', 's8_o4xquB3baymoNwjPVwRRfm_s')
-    origin, destination, search_date = command.split(' ')
+    cmd, origin, destination, search_date = command.split(' ')
 
     query_station_name_url = "https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?$select=StationID&$filter=StationName/Zh_tw eq '{station}'&$format=JSON"
 
