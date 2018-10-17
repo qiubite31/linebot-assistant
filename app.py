@@ -21,9 +21,9 @@ config.read("config.ini")
 line_bot_api = LineBotApi(config['line_bot']['Channel_Access_Token'])
 handler = WebhookHandler(config['line_bot']['Channel_Secret'])
 
-@app.route("/tra", methods=['GET'])
-def tra():
-    command = 'TRA 鶯歌 內壢 2018-10-18'
+# @app.route("/tra", methods=['GET'])
+def tra(command):
+    # command = 'TRA 鶯歌 內壢 2018-10-18'
 
     from PtxAuth import Auth
     auth = Auth('c6751135db984d388b28508a966e573d', 's8_o4xquB3baymoNwjPVwRRfm_s')
