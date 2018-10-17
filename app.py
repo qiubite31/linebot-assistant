@@ -48,7 +48,7 @@ def tra(command):
     train_records = json.loads(response.text)
     return_msg = ''
 
-    return_template = "{}<->{} {} No:{} {} - {}\n"
+    return_template = "{}-{} {} No:{} {}-{}\n"
     for train_record in train_records:
         train_no = train_record['DailyTrainInfo']['TrainNo']
         trin_type = train_record['DailyTrainInfo']['TrainTypeName']['Zh_tw']
