@@ -1,3 +1,7 @@
+import configparser
+import requests
+import json
+import pandas as pd
 from flask import Flask, request, abort
 
 from linebot import (
@@ -11,10 +15,48 @@ from linebot.models import (
 )
 
 app = Flask(__name__)
+config = configparser.ConfigParser()
+config.read("config.ini")
 
-line_bot_api = LineBotApi('+vgq3+NUInJEoZtKnzwdusbAW7iXqg7CpjK+HLn2tsVI+V6GmGa71UFKG1hZXh3HceUEVVfl4sg647cQAHEJuUkuss2ISTqEIBI8m2xdENSVzqUmM7508n5QwGY9WWvzXuDTYbAak9A8ROMpFP8f8gdB04t89/1O/w1cDnyilFU=')
-handler = WebhookHandler('9c4ba64d8f9cb71af6b6ff9f22137ea9')
+line_bot_api = LineBotApi(config['line_bot']['Channel_Access_Token'])
+handler = WebhookHandler(config['line_bot']['Channel_Secret'])
 
+@app.route("/tra", methods=['GET'])
+def tra():
+    command = '鶯歌 內壢 2018-10-18'
+
+    from PtxAuth import Auth
+    auth = Auth('c6751135db984d388b28508a966e573d', 's8_o4xquB3baymoNwjPVwRRfm_s')
+    origin, destination, search_date = command.split(' ')
+
+    query_station_name_url = "https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?$select=StationID&$filter=StationName/Zh_tw eq '{station}'&$format=JSON"
+
+    response = requests.get(query_station_name_url.format(station=origin), headers=auth.get_auth_header())
+    origin_station_id = json.loads(response.text)[0]['StationID']
+
+    response = requests.get(query_station_name_url.format(station=destination), headers=auth.get_auth_header())
+    destination_station_id = json.loads(response.text)[0]['StationID']
+
+    url = 'https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/DailyTimetable/OD/{origin_station_id}/to/{destination_station_id}/{search_date}?$orderby=OriginStopTime/DepartureTime&$format=JSON'
+
+    url = url.format(origin_station_id=origin_station_id, destination_station_id=destination_station_id, search_date=search_date)
+
+    response = requests.get(url, headers=auth.get_auth_header())
+
+    train_records = json.loads(response.text)
+    return_msg = ''
+
+    return_template = "{}<->{} {} No:{} {} - {}\n"
+    for train_record in train_records:
+        train_no = train_record['DailyTrainInfo']['TrainNo']
+        trin_type = train_record['DailyTrainInfo']['TrainTypeName']['Zh_tw']
+        origin_stop = train_record['OriginStopTime']['StationName']['Zh_tw']
+        departure_time = train_record['OriginStopTime']['DepartureTime']
+        destination_stop = train_record['DestinationStopTime']['StationName']['Zh_tw']
+        arrival_time = train_record['DestinationStopTime']['ArrivalTime']
+        return_msg += return_template.format(origin_stop, destination_stop, trin_type, train_no, departure_time, arrival_time)
+
+    return return_msg
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -36,6 +78,13 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    if 'TRA' in event.message.text:
+        content = tra(event.message.text)
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=content))
+        return 0
+
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=event.message.text))
