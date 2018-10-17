@@ -82,6 +82,7 @@ def callback():
 def handle_message(event):
     if 'TRA' in event.message.text:
         content = tra(event.message.text)
+        print(len(content)))
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=content))
