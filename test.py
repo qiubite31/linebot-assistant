@@ -6,7 +6,7 @@ import pandas as pd
 
 auth = Auth('c6751135db984d388b28508a966e573d', 's8_o4xquB3baymoNwjPVwRRfm_s')
 
-command = '台北 台東 2018-10-18'
+command = '新竹 臺中 2018-10-18'
 
 origin, destination, search_date = command.split(' ')
 

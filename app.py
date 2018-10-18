@@ -84,7 +84,7 @@ def handle_message(event):
     receive_cmd = event.message.text.split(' ')[0]
     detail_cmd = event.message.text.split(' ')[1:]
     if receive_cmd in tra_cmd:
-        content = tra(detail_cmd)
+        content = tra(' '.join(detail_cmd))
         print(len(content))
         line_bot_api.reply_message(
             event.reply_token,
