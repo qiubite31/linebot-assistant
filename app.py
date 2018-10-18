@@ -29,7 +29,7 @@ def tra(command):
 
     from PtxAuth import Auth
     auth = Auth('c6751135db984d388b28508a966e573d', 's8_o4xquB3baymoNwjPVwRRfm_s')
-    cmd, origin, destination, search_date = command.split(' ')
+    origin, destination, search_date = command.split(' ')
 
     query_station_name_url = "https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?$select=StationID&$filter=StationName/Zh_tw eq '{station}'&$format=JSON"
 
@@ -80,8 +80,11 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    if 'TRA' in event.message.text:
-        content = tra(event.message.text)
+    tra_cmd = ('TRA', '台鐵', '臺鐵', '火車', )
+    receive_cmd = event.message.text.split(' ')[0]
+    detail_cmd = event.message.text.split(' ')[1:]
+    if receive_cmd in tra_cmd:
+        content = tra(detail_cmd)
         print(len(content))
         line_bot_api.reply_message(
             event.reply_token,
