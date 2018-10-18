@@ -14,21 +14,19 @@ from linebot.models import (
 )
 
 app = Flask(__name__)
-config = configparser.ConfigParser()
-config.read("config.ini")
+# config = configparser.ConfigParser()
+# config.read("config.ini")
 
-line_bot_api = LineBotApi(config['line_bot']['Channel_Access_Token'])
-handler = WebhookHandler(config['line_bot']['Channel_Secret'])
+# line_bot_api = LineBotApi(config['line_bot']['Channel_Access_Token'])
+# handler = WebhookHandler(config['line_bot']['Channel_Secret'])
 
-line_bot_api = LineBotApi('+vgq3+NUInJEoZtKnzwdusbAW7iXqg7CpjK+HLn2tsVI+V6GmGa71UFKG1hZXh3HceUEVVfl4sg647cQAHEJuUkuss2ISTqEIBI8m2xdENSVzqUmM7508n5QwGY9WWvzXuDTYbAak9A8ROMpFP8f8gdB04t89/1O/w1cDnyilFU=')
-handler = WebhookHandler('9c4ba64d8f9cb71af6b6ff9f22137ea9')
+line_bot_api = LineBotApi('Access Token')
+handler = WebhookHandler('Channel Secret')
 
-# @app.route("/tra", methods=['GET'])
+
 def tra(command):
-    # command = 'TRA 鶯歌 內壢 2018-10-18'
-
     from PtxAuth import Auth
-    auth = Auth('c6751135db984d388b28508a966e573d', 's8_o4xquB3baymoNwjPVwRRfm_s')
+    auth = Auth('APP ID', 'APP KEY')
     origin, destination, search_date = command.split(' ')
 
     query_station_name_url = "https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?$select=StationID&$filter=StationName/Zh_tw eq '{station}'&$format=JSON"
