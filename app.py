@@ -1,4 +1,5 @@
-import configparser
+from datetime import datetime, timedelta
+import pytz
 import requests
 import json
 from flask import Flask, request, abort
@@ -14,20 +15,54 @@ from linebot.models import (
 )
 
 app = Flask(__name__)
-# config = configparser.ConfigParser()
-# config.read("config.ini")
 
-# line_bot_api = LineBotApi(config['line_bot']['Channel_Access_Token'])
-# handler = WebhookHandler(config['line_bot']['Channel_Secret'])
+line_bot_api = LineBotApi('')
+handler = WebhookHandler('')
 
-line_bot_api = LineBotApi('Access Token')
-handler = WebhookHandler('Channel Secret')
+def get_date_str(date_input):
+    fix_keywords = ('今天', '明天', '後天', )
+    if date_input in fix_keywords:
+
+        today = datetime.now(pytz.timezone('Asia/Taipei'))
+        if date_input == '明天':
+            today = today + timedelta(days=1)
+        if date_input == '後天':
+            today = today + timedelta(days=2)
+        year = today.year
+        month = today.month
+        day = today.day
+    else:
+        split_char = ''
+        if '-' in date_input:
+            split_char = '-'
+        elif '/' in date_input:
+            split_char = '/'
+        else:
+            pass
+
+        date_format_len = len(date_input.split(split_char))
+        year = str(datetime.now().year) if date_format_len == 2 else date_input.split(split_char)[0]
+        month = date_input.split(split_char)[0] if date_format_len == 2 else date_input.split(split_char)[1]
+        day = date_input.split(split_char)[1] if date_format_len == 2 else date_input.split(split_char)[2]
+
+    search_date = '{}-{}-{}'.format(year, month, day)
+
+    return search_date
 
 
+# @app.route("/tra", methods=['GET'])
 def tra(command):
     from PtxAuth import Auth
-    auth = Auth('APP ID', 'APP KEY')
-    origin, destination, search_date = command.split(' ')
+    auth = Auth('', '')
+    if len(command.split(' ')) < 4:
+        notice_message = '查詢火車時刻表請輸入以下指令:\n'
+        notice_message += '台鐵 [出發站] [抵達站] [日期] [時間]\n'
+        notice_message += '例如\n'
+        notice_message += '台鐵 臺北 臺東 10/19 12:00'
+        notice_message += '台鐵 臺北 臺東 今天 12:00'
+        return notice_message
+
+    origin, destination, input_date, input_time = command.split(' ')
 
     query_station_name_url = "https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?$select=StationID&$filter=StationName/Zh_tw eq '{station}'&$format=JSON"
 
@@ -37,24 +72,37 @@ def tra(command):
     response = requests.get(query_station_name_url.format(station=destination), headers=auth.get_auth_header())
     destination_station_id = json.loads(response.text)[0]['StationID']
 
-    url = 'https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/DailyTimetable/OD/{origin_station_id}/to/{destination_station_id}/{search_date}?$orderby=OriginStopTime/DepartureTime&$format=JSON'
+    search_date = get_date_str(input_date)
+    print(search_date)
 
-    url = url.format(origin_station_id=origin_station_id, destination_station_id=destination_station_id, search_date=search_date)
+    url = """https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/DailyTimetable/OD/{origin_station_id}/to/{destination_station_id}/{search_date}?$filter=OriginStopTime/DepartureTime gt '{search_time}'&$orderby=OriginStopTime/DepartureTime&$format=JSON"""
+
+    url = url.format(origin_station_id=origin_station_id, destination_station_id=destination_station_id, search_date=search_date, search_time=input_time)
 
     response = requests.get(url, headers=auth.get_auth_header())
 
     train_records = json.loads(response.text)
     return_msg = ''
 
-    return_template = "{}-{} {} No:{} {}-{}\n"
+    return_msg += '{}<->{} {}\n'.format(origin, destination, search_date)
+    return_template = "{} No:{: <4}\t{} - {}\n"
     for train_record in train_records:
         train_no = train_record['DailyTrainInfo']['TrainNo']
-        trin_type = train_record['DailyTrainInfo']['TrainTypeName']['Zh_tw']
-        origin_stop = train_record['OriginStopTime']['StationName']['Zh_tw']
+        train_type = train_record['DailyTrainInfo']['TrainTypeName']['Zh_tw']
+        if '普悠瑪' in train_type:
+            train_type = '普悠瑪'
+        elif '太魯閣' in train_type:
+            train_type = '太魯閣'
+        elif '自強' in train_type:
+            train_type = '自強號'
+        elif '莒光' in train_type:
+            train_type = '莒光號'
+
+        # origin_stop = train_record['OriginStopTime']['StationName']['Zh_tw']
         departure_time = train_record['OriginStopTime']['DepartureTime']
-        destination_stop = train_record['DestinationStopTime']['StationName']['Zh_tw']
+        # destination_stop = train_record['DestinationStopTime']['StationName']['Zh_tw']
         arrival_time = train_record['DestinationStopTime']['ArrivalTime']
-        return_msg += return_template.format(origin_stop, destination_stop, trin_type, train_no, departure_time, arrival_time)
+        return_msg += return_template.format(train_type, train_no, departure_time, arrival_time)
 
     return return_msg
 
@@ -83,12 +131,12 @@ def handle_message(event):
     detail_cmd = event.message.text.split(' ')[1:]
     if receive_cmd in tra_cmd:
         content = tra(' '.join(detail_cmd))
-        print(len(content))
+
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=content))
         return 0
-    print(event.message.text)
+
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=event.message.text))
