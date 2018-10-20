@@ -1,3 +1,4 @@
+# import configparser
 from datetime import datetime, timedelta
 import pytz
 import requests
@@ -15,6 +16,11 @@ from linebot.models import (
 )
 
 app = Flask(__name__)
+# config = configparser.ConfigParser()
+# config.read("config.ini")
+
+# line_bot_api = LineBotApi(config['line_bot']['Channel_Access_Token'])
+# handler = WebhookHandler(config['line_bot']['Channel_Secret'])
 
 line_bot_api = LineBotApi('')
 handler = WebhookHandler('')
@@ -22,7 +28,6 @@ handler = WebhookHandler('')
 def get_date_str(date_input):
     fix_keywords = ('今天', '明天', '後天', )
     if date_input in fix_keywords:
-
         today = datetime.now(pytz.timezone('Asia/Taipei'))
         if date_input == '明天':
             today = today + timedelta(days=1)
@@ -54,15 +59,25 @@ def get_date_str(date_input):
 def tra(command):
     from PtxAuth import Auth
     auth = Auth('', '')
-    if len(command.split(' ')) < 4:
+    if len(command.split(' ')) < 3:
         notice_message = '查詢火車時刻表請輸入以下指令:\n'
         notice_message += '台鐵 [出發站] [抵達站] [日期] [時間]\n'
         notice_message += '例如\n'
-        notice_message += '台鐵 臺北 臺東 10/19 12:00'
-        notice_message += '台鐵 臺北 臺東 今天 12:00'
+        notice_message += '台鐵 臺北 臺東 10/19 12:00\n'
+        notice_message += '台鐵 臺北 臺東 今天 18:00\n'
+        notice_message += '台鐵 臺北 臺東 明天'
         return notice_message
 
-    origin, destination, input_date, input_time = command.split(' ')
+    keywords = command.split(' ')
+
+    origin = keywords[0]
+    destination = keywords[1]
+    input_date = keywords[2]
+
+    if len(keywords) > 3:
+        input_time = keywords[3]
+    else:
+        input_time = '00:00'
 
     query_station_name_url = "https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?$select=StationID&$filter=StationName/Zh_tw eq '{station}'&$format=JSON"
 
@@ -105,6 +120,7 @@ def tra(command):
         return_msg += return_template.format(train_type, train_no, departure_time, arrival_time)
 
     return return_msg
+
 
 @app.route("/callback", methods=['POST'])
 def callback():
