@@ -25,6 +25,36 @@ app = Flask(__name__)
 line_bot_api = LineBotApi('')
 handler = WebhookHandler('')
 
+
+def check_is_date(input):
+    if input in ('今天', '明天', '後天', ):
+        return True
+
+    split_char = ''
+    if '-' in input:
+        split_char = '-'
+    elif '/' in input:
+        split_char = '/'
+    else:
+        pass
+
+    try:
+        if input.count(split_char) == 2:
+            date_format = '%Y{split}%m{split}%d'.format(split=split_char)
+        elif input.count(split_char) == 1:
+            date_format = '%m{split}%d'.format(split=split_char)
+        else:
+            date_format = '%m%d'.format(split=split_char)
+
+        datetime.strptime(input, date_format)
+        return True
+
+    except ValueError as err:
+        return False
+
+    return False
+
+
 def get_date_str(date_input):
     fix_keywords = ('今天', '明天', '後天', )
     if date_input in fix_keywords:
@@ -59,25 +89,36 @@ def get_date_str(date_input):
 def tra(command):
     from PtxAuth import Auth
     auth = Auth('', '')
-    if len(command.split(' ')) < 3:
+    if len(command.split(' ')) < 2:
         notice_message = '查詢火車時刻表請輸入以下指令:\n'
         notice_message += '台鐵 [出發站] [抵達站] [日期] [時間]\n'
         notice_message += '例如\n'
         notice_message += '台鐵 臺北 臺東 10/19 12:00\n'
         notice_message += '台鐵 臺北 臺東 今天 18:00\n'
-        notice_message += '台鐵 臺北 臺東 明天'
+        notice_message += '台鐵 臺北 臺東 明天\n'
+        notice_message += '台鐵 臺北 臺東 18:00\n'
+        notice_message += '台鐵 臺北 臺東'
         return notice_message
 
     keywords = command.split(' ')
 
     origin = keywords[0]
     destination = keywords[1]
-    input_date = keywords[2]
 
-    if len(keywords) > 3:
+    if len(keywords) == 4:
+        input_date = keywords[2]
         input_time = keywords[3]
-    else:
+    elif len(keywords) == 2:
         input_time = '00:00'
+        input_date = '今天'
+    else:
+        is_date = check_is_date(keywords[2])
+        if is_date:
+            input_date = keywords[2]
+            input_time = '00:00'
+        else:
+            input_time = keywords[2]
+            input_date = '今天'
 
     query_station_name_url = "https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?$select=StationID&$filter=StationName/Zh_tw eq '{station}'&$format=JSON"
 
