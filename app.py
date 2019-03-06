@@ -80,7 +80,7 @@ def get_date_str(date_input):
         month = date_input.split(split_char)[0] if date_format_len == 2 else date_input.split(split_char)[1]
         day = date_input.split(split_char)[1] if date_format_len == 2 else date_input.split(split_char)[2]
 
-    search_date = '{}-{}-{}'.format(year, month, day)
+    search_date = '{}-{}-{}'.format(year, '{:0>2}'.format(month), '{:0>2}'.format(day))
 
     return search_date
 
