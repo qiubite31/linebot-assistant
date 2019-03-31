@@ -102,8 +102,8 @@ def tra(command):
 
     keywords = command.split(' ')
 
-    origin = keywords[0]
-    destination = keywords[1]
+    origin = keywords[0].replace('台', '臺')
+    destination = keywords[1].replace('台', '臺')
 
     if len(keywords) == 4:
         input_date = keywords[2]
