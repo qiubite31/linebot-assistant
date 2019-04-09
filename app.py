@@ -142,7 +142,7 @@ def tra(command):
 
     return_msg += '{}<->{} {}\n'.format(origin, destination, search_date)
     return_template = "{} No:{: <4}\t{} - {}\n"
-    for train_record in train_records:
+    for train_record in train_records[:20]:
         train_no = train_record['DailyTrainInfo']['TrainNo']
         train_type = train_record['DailyTrainInfo']['TrainTypeName']['Zh_tw']
         if '普悠瑪' in train_type:
@@ -184,19 +184,20 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     tra_cmd = ('TRA', '台鐵', '臺鐵', '火車', )
+    receive_text = event.message.text.split(' ')
     receive_cmd = event.message.text.split(' ')[0]
     detail_cmd = event.message.text.split(' ')[1:]
     if receive_cmd in tra_cmd:
-        content = tra(' '.join(detail_cmd))
+        input_cmd = ' '.join(detail_cmd)
+    else:
+        input_cmd = 'TRA'
 
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=content))
-        return 0
+    content = tra(input_cmd)
 
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text=event.message.text))
+        TextSendMessage(text=content))
+    return 0
 
 
 if __name__ == "__main__":
