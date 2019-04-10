@@ -197,7 +197,9 @@ def tra(command):
 
     return_msg += '{}<->{} {}\n'.format(origin, destination, search_date)
     return_template = "{} No:{: <4}\t{} - {}\n"
-    for train_record in train_records[:20]:
+
+    count = 0
+    for train_record in train_records:
         train_no = train_record['DailyTrainInfo']['TrainNo']
         train_type = train_record['DailyTrainInfo']['TrainTypeName']['Zh_tw']
         if '普悠瑪' in train_type:
@@ -219,6 +221,10 @@ def tra(command):
         # destination_stop = train_record['DestinationStopTime']['StationName']['Zh_tw']
         arrival_time = train_record['DestinationStopTime']['ArrivalTime']
         return_msg += return_template.format(train_type, train_no, departure_time, arrival_time)
+
+        count += 1
+        if count == 20:
+            break
 
     return return_msg
 
