@@ -84,6 +84,37 @@ def get_date_str(date_input):
 
     return search_date
 
+def check_input_is_train_type(input):
+    if '自強' in input:
+        return True
+    elif '對號' in input:
+        return True
+    elif '區間' in input:
+        return True
+    elif '莒光' in input:
+        return True
+    elif '太魯閣' in input:
+        return True
+    elif '普悠瑪' in input:
+        return True
+    else:
+        return False
+
+def check_train_type(target_type, given_type):
+    if '自強' in target_type and given_type in ('自強號', '太魯閣', '普悠瑪',):
+        return True
+    elif '對號' in target_type and given_type in ('自強號', '太魯閣', '普悠瑪', '莒光號', ):
+        return True
+    elif '區間' in target_type and '區間' in given_type:
+        return True
+    elif '莒光' in target_type and '莒光' in given_type:
+        return True
+    elif '太魯閣' == target_type and '太魯閣' == given_type:
+        return True
+    elif '普悠瑪' == target_type and '普悠瑪' == given_type:
+        return True
+    else:
+        return False
 
 # @app.route("/tra", methods=['GET'])
 def tra(command):
@@ -105,20 +136,44 @@ def tra(command):
     origin = keywords[0].replace('台', '臺')
     destination = keywords[1].replace('台', '臺')
 
-    if len(keywords) == 4:
-        input_date = keywords[2]
-        input_time = keywords[3]
-    elif len(keywords) == 2:
+    if len(keywords) == 2:
         input_time = '00:00'
         input_date = '今天'
-    else:
+        filter_train_type = None
+    elif len(keywords) == 3:
         is_date = check_is_date(keywords[2])
+        is_train_type = check_input_is_train_type(keywords[2])
+
         if is_date:
             input_date = keywords[2]
             input_time = '00:00'
-        else:
-            input_time = keywords[2]
+            filter_train_type = None
+        elif is_train_type:
+            input_time = '00:00'
             input_date = '今天'
+            filter_train_type = keywords[2]
+        else:
+            input_date = '今天'
+            input_time = keywords[2]
+            filter_train_type = None
+    elif len(keywords) == 4:
+        is_parm2_date = check_is_date(keywords[2])
+        is_parm3_train_type = check_input_is_train_type(keywords[3])
+
+        if is_parm2_date:
+            input_date = keywords[2]
+            input_time = keywords[3] if not is_parm3_train_type else '00:00'
+            filter_train_type = keywords[3] if is_parm3_train_type else None
+        else:
+            input_date = '今天'
+            input_time = keywords[2]
+            filter_train_type = keywords[3]
+    elif len(keywords) == 5:
+        input_date = keywords[2]
+        input_time = keywords[3]
+        filter_train_type = keywords[4]
+    else:
+        pass
 
     query_station_name_url = "https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/Station?$select=StationID&$filter=StationName/Zh_tw eq '{station}'&$format=JSON"
 
@@ -153,6 +208,11 @@ def tra(command):
             train_type = '自強號'
         elif '莒光' in train_type:
             train_type = '莒光號'
+
+        if filter_train_type:
+            is_select_train_type = check_train_type(filter_train_type, train_type)
+            if not is_select_train_type:
+                continue
 
         # origin_stop = train_record['OriginStopTime']['StationName']['Zh_tw']
         departure_time = train_record['OriginStopTime']['DepartureTime']
