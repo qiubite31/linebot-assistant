@@ -116,20 +116,26 @@ def check_train_type(target_type, given_type):
     else:
         return False
 
+def default_msg():
+    notice_message = '查詢火車時刻表請輸入以下指令:\n'
+    notice_message += '台鐵 [出發站] [抵達站] [日期] [時間]\n'
+    notice_message += '例如\n'
+    notice_message += '台鐵 臺北 臺東 10/19 12:00\n'
+    notice_message += '台鐵 臺北 臺東 今天 18:00\n'
+    notice_message += '台鐵 臺北 臺東 明天\n'
+    notice_message += '台鐵 臺北 臺東 18:00\n'
+    notice_message += '台鐵 臺北 臺東 自強\n'
+    notice_message += '台鐵 臺北 臺東 明天 自強\n'
+    notice_message += '台鐵 臺北 臺東 19:00 自強\n'
+    notice_message += '台鐵 臺北 臺東'
+    return notice_message
+
 # @app.route("/tra", methods=['GET'])
 def tra(command):
     from PtxAuth import Auth
     auth = Auth('', '')
     if len(command.split(' ')) < 2:
-        notice_message = '查詢火車時刻表請輸入以下指令:\n'
-        notice_message += '台鐵 [出發站] [抵達站] [日期] [時間]\n'
-        notice_message += '例如\n'
-        notice_message += '台鐵 臺北 臺東 10/19 12:00\n'
-        notice_message += '台鐵 臺北 臺東 今天 18:00\n'
-        notice_message += '台鐵 臺北 臺東 明天\n'
-        notice_message += '台鐵 臺北 臺東 18:00\n'
-        notice_message += '台鐵 臺北 臺東'
-        return notice_message
+        return default_msg()
 
     keywords = command.split(' ')
 
