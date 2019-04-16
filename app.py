@@ -118,7 +118,7 @@ def check_train_type(target_type, given_type):
 
 def default_msg():
     notice_message = '查詢火車時刻表請輸入以下指令:\n'
-    notice_message += '台鐵 [出發站] [抵達站] [日期] [時間]\n'
+    notice_message += '台鐵 [出發站] [抵達站] [日期] [時間] [車種]\n'
     notice_message += '例如\n'
     notice_message += '台鐵 臺北 臺東 10/19 12:00\n'
     notice_message += '台鐵 臺北 臺東 今天 18:00\n'
