@@ -116,6 +116,10 @@ def check_train_type(target_type, given_type):
     else:
         return False
 
+def get_current_time():
+    curr_dt = datetime.now(pytz.timezone('Asia/Taipei'))
+    return '{}:{}'.format(curr_dt.hour, curr_dt.minute)
+
 def default_msg():
     notice_message = '查詢火車時刻表請輸入以下指令:\n'
     notice_message += '台鐵 [出發站] [抵達站] [日期] [時間] [車種]\n'
@@ -143,7 +147,7 @@ def tra(command):
     destination = keywords[1].replace('台', '臺')
 
     if len(keywords) == 2:
-        input_time = '00:00'
+        input_time = get_current_time()
         input_date = '今天'
         filter_train_type = None
     elif len(keywords) == 3:
@@ -152,10 +156,10 @@ def tra(command):
 
         if is_date:
             input_date = keywords[2]
-            input_time = '00:00'
+            input_time = get_current_time()
             filter_train_type = None
         elif is_train_type:
-            input_time = '00:00'
+            input_time = get_current_time()
             input_date = '今天'
             filter_train_type = keywords[2]
         else:
