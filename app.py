@@ -84,6 +84,7 @@ def get_date_str(date_input):
 
     return search_date
 
+
 def check_input_is_train_type(input):
     if '自強' in input:
         return True
@@ -116,9 +117,11 @@ def check_train_type(target_type, given_type):
     else:
         return False
 
+
 def get_current_time():
     curr_dt = datetime.now(pytz.timezone('Asia/Taipei'))
-    return '{}:{}'.format(curr_dt.hour, curr_dt.minute)
+    return '{}:{:0>2}'.format(curr_dt.hour, curr_dt.minute)
+
 
 def default_msg():
     notice_message = '查詢火車時刻表請輸入以下指令:\n'
@@ -133,6 +136,7 @@ def default_msg():
     notice_message += '台鐵 臺北 臺東 19:00 自強\n'
     notice_message += '台鐵 臺北 臺東'
     return notice_message
+
 
 # @app.route("/tra", methods=['GET'])
 def tra(command):
@@ -194,24 +198,30 @@ def tra(command):
     destination_station_id = json.loads(response.text)[0]['StationID']
 
     search_date = get_date_str(input_date)
-    print(search_date)
 
     url = """https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/DailyTimetable/OD/{origin_station_id}/to/{destination_station_id}/{search_date}?$filter=OriginStopTime/DepartureTime gt '{search_time}'&$orderby=OriginStopTime/DepartureTime&$format=JSON"""
-
     url = url.format(origin_station_id=origin_station_id, destination_station_id=destination_station_id, search_date=search_date, search_time=input_time)
-
     response = requests.get(url, headers=auth.get_auth_header())
-
     train_records = json.loads(response.text)
+
+
+    url = """https://ptx.transportdata.tw/MOTC/v2/Rail/TRA/LiveBoard/Station/{origin_station_id}?$top=30&$format=JSON"""
+    url = url.format(origin_station_id=origin_station_id)
+    response = requests.get(url, headers=auth.get_auth_header())
+    train_status_records = json.loads(response.text)
+    train_to_delaytime = {x['TrainNo']: x['DelayTime'] for x in train_status_records}
+
     return_msg = ''
 
     return_msg += '{}<->{} {}\n'.format(origin, destination, search_date)
-    return_template = "{} No:{: <4}\t{} - {}\n"
+    return_template = "{} No:{: <4}\t{} - {}+{}\n"
 
     count = 0
     for train_record in train_records:
         train_no = train_record['DailyTrainInfo']['TrainNo']
         train_type = train_record['DailyTrainInfo']['TrainTypeName']['Zh_tw']
+        delaytime = train_to_delaytime.get(train_no, 0)
+
         if '普悠瑪' in train_type:
             train_type = '普悠瑪'
         elif '太魯閣' in train_type:
@@ -230,7 +240,7 @@ def tra(command):
         departure_time = train_record['OriginStopTime']['DepartureTime']
         # destination_stop = train_record['DestinationStopTime']['StationName']['Zh_tw']
         arrival_time = train_record['DestinationStopTime']['ArrivalTime']
-        return_msg += return_template.format(train_type, train_no, departure_time, arrival_time)
+        return_msg += return_template.format(train_type, train_no, departure_time, arrival_time, delaytime)
 
         count += 1
         if count == 20:
