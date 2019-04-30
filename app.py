@@ -249,6 +249,35 @@ def tra(command):
     return return_msg
 
 
+def metro(command):
+    from PtxAuth import Auth
+    auth = Auth('', '')
+    if len(command.split(' ')) < 2:
+        return default_msg()
+
+    keywords = command.split(' ')
+
+    origin = keywords[0].replace('台', '臺')
+    destination = keywords[1].replace('台', '臺')
+
+    url = "https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/ODFare/TRTC?$filter=OriginStationName/Zh_tw eq '{origin_station_name}' and DestinationStationName/Zh_tw eq '{destination_station_name}'&$top=30&$format=JSON"
+
+    url = url.format(origin_station_name=origin, destination_station_name=destination)
+
+    response = requests.get(url, headers=auth.get_auth_header())
+
+    fare_records = json.loads(response.text)[0]
+
+    destination_station_id = fare_records['DestinationStationID']
+    origin_station_id = fare_records['OriginStationID']
+
+    fare_adult = fare_records['Fares'][0]['Price']
+    fare_adult_eticket = fare_records['Fares'][9]['Price']
+
+    msg = "{}到{}票價{}電子票價{}".format(origin, destination, fare_adult, fare_adult_eticket)
+
+    return msg
+
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header value
@@ -273,12 +302,18 @@ def handle_message(event):
     receive_text = event.message.text.split(' ')
     receive_cmd = event.message.text.split(' ')[0]
     detail_cmd = event.message.text.split(' ')[1:]
-    if receive_cmd in tra_cmd:
-        input_cmd = ' '.join(detail_cmd)
-    else:
-        input_cmd = 'TRA'
 
-    content = tra(input_cmd)
+    if receive_cmd == '捷運':
+        input_cmd = ' '.join(detail_cmd)
+        content = metro(input_cmd)
+    else:
+
+        if receive_cmd in tra_cmd:
+            input_cmd = ' '.join(detail_cmd)
+        else:
+            input_cmd = 'TRA'
+
+        content = tra(input_cmd)
 
     line_bot_api.reply_message(
         event.reply_token,
