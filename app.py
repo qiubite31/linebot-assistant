@@ -257,8 +257,8 @@ def metro(command):
 
     keywords = command.split(' ')
 
-    origin = keywords[0].replace('台', '臺')
-    destination = keywords[1].replace('台', '臺')
+    origin = keywords[0]
+    destination = keywords[1]
 
     url = "https://ptx.transportdata.tw/MOTC/v2/Rail/Metro/ODFare/TRTC?$filter=OriginStationName/Zh_tw eq '{origin_station_name}' and DestinationStationName/Zh_tw eq '{destination_station_name}'&$top=30&$format=JSON"
 
